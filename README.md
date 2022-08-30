@@ -18,4 +18,6 @@ This is an opportunity to test your ability in building a backend project. There
 
 ## Complete ERD
 
+*Note that some foreign keys are missing from the diagram - this is intentional, you should add the relevant relations in the schema file.*
+
 ![](./assets/BlogDomain.PNG)
