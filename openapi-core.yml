@@ -1,0 +1,730 @@
+openapi: 3.0.0
+info:
+  title: Blog API - Core Criteria
+  version: 0.0.1
+servers:
+  - url: http://localhost:4040
+basePath: /
+schemes:
+  - http
+paths:
+  /users:
+    post:
+      summary: Create a user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    $ref: "#/components/schemas/User"
+        400:
+          description: ERROR - Missing fields in the request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        409:
+          description: ERROR - A user with the provided username/email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /users/{id}:
+    put:
+      summary: Update a user
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    $ref: "#/components/schemas/User"
+        404:
+          description: ERROR - User with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        409:
+          description: ERROR - A user with the provided username/email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Delete a user
+      description: This route should also delete their profile, posts and comments
+      tags:
+        - users
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    $ref: "#/components/schemas/User"
+        404:
+          description: ERROR - User with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /users/{id}/posts:
+    post:
+      summary: Create a post
+      description: If the request body contains category names that don't exist yet, they should be created. If a category by the provided name already exists, it should just be connected to this post.
+      tags:
+        - posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    type: object
+                    $ref: "#/components/schemas/Post"
+        400:
+          description: ERROR - Missing fields in request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: ERROR - User with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        409:
+          description: ERROR - A post with the provided title already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    get:
+      summary: Retrieve a list of posts for a specific user
+      parameters:
+        - name: page
+          in: query
+          description: The page of results to get posts for, defaulting to 1.
+          schema:
+            type: integer
+        - name: perPage
+          in: query
+          description: Limit the number of results per page, defaulting to 10.
+          schema:
+            type: integer
+      tags:
+        - posts
+      responses:
+        200:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+        404:
+          description: ERROR - User with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /users/{userId}/posts/{postId}:
+    put:
+      summary: Update an existing post (see description for note)
+      description: This route should also allow updating the categories attached to the post. If you provide any categories that the post already has, it should remove those categories from the post.
+      tags:
+        - posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    type: object
+                    $ref: "#/components/schemas/Post"
+        404:
+          description: ERROR - User / post with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        409:
+          description: ERROR - A post with the provided title already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Delete a post
+      description: This route should also delete comments
+      tags:
+        - posts
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    type: object
+                    $ref: "#/components/schemas/Post"
+        404:
+          description: ERROR - User / post with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /posts:
+    get:
+      summary: Retrieve a list of posts
+      parameters:
+        - name: page
+          in: query
+          description: The page of results to get posts for, defaulting to 1.
+          schema:
+            type: integer
+        - name: perPage
+          in: query
+          description: Limit the number of results per page, defaulting to 10.
+          schema:
+            type: integer
+        - name: order_by
+          in: query
+          description: Order the posts by oldest or latest, defaulting to latest.
+          schema:
+            type: string
+            enum:
+              - latest
+              - oldest
+      tags:
+        - posts
+      responses:
+        200:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+  /posts/{id}/comments:
+    post:
+      summary: Create a comment on a post
+      tags:
+        - comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    type: object
+                    $ref: "#/components/schemas/Reply"
+        400:
+          description: ERROR - Missing fields in request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: ERROR - Post with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /posts/{postId}/comments/{commentId}:
+    post:
+      summary: Create a reply to a comment
+      tags:
+        - comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    type: object
+                    $ref: "#/components/schemas/Reply"
+        400:
+          description: ERROR - Missing fields in request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: ERROR - Post / comment with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      summary: Update a comment
+      tags:
+        - comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    type: object
+                    $ref: "#/components/schemas/Reply"
+        400:
+          description: ERROR - Missing fields in request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: ERROR - Post / comment with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Delete a comment
+      description: If this comment has any replies, delete the replies.
+      tags:
+        - comments
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    type: object
+                    $ref: "#/components/schemas/Reply"
+        404:
+          description: ERROR - Post / comment with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /categories:
+    get:
+      summary: Retrieve a list of all categories
+      tags:
+        - categories
+      responses:
+        200:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+    post:
+      summary: Create a category
+      tags:
+        - categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    type: object
+                    $ref: "#/components/schemas/Category"
+        400:
+          description: ERROR - Missing fields in request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        409:
+          description: ERROR - Category with that name already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /categories/{id}:
+    put:
+      summary: Update a category
+      tags:
+        - categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryPost"
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    type: object
+                    $ref: "#/components/schemas/Category"
+        400:
+          description: ERROR - Missing fields in request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: ERROR - Category with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        409:
+          description: ERROR - Category with that name already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Delete a category
+      tags:
+        - categories
+      responses:
+        201:
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    type: object
+                    $ref: "#/components/schemas/Category"
+        404:
+          description: ERROR - Category with that id does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+components:
+  schemas:
+    User: 
+      type: object
+      properties:
+        id: 
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        profile:
+          type: object
+          $ref: '#/components/schemas/Profile'
+    Profile: 
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        age:
+          type: integer
+        pictureUrl:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    UserPost: 
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        age:
+          type: integer
+        pictureUrl:
+          type: string
+    Post: 
+      type: object
+      properties:
+        id: 
+          type: integer
+        author: 
+          type: object
+          $ref: '#/components/schemas/User'
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+        publishedAt:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PostPost: 
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+        publishedAt:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryPost'
+    Reply:
+      type: object
+      properties:
+        id: 
+          type: integer
+        postId: 
+          type: integer
+        userId: 
+          type: integer
+        parentId: 
+          type: integer
+        content:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    Comment:
+      type: object
+      properties:
+        id: 
+          type: integer
+        postId: 
+          type: integer
+        userId: 
+          type: integer
+        content:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        replies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reply'
+    Category: 
+      type: object
+      properties:
+        id: 
+          type: integer
+        name: 
+          type: string
+    CategoryPost: 
+      type: object
+      properties:
+        name: 
+          type: string
+    CommentPost: 
+      type: object
+      properties:
+        userId: 
+          type: integer
+        content:
+          type: string
+    
